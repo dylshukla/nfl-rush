@@ -5,7 +5,7 @@ running <- data %>% select(matches("home_team|away_team"), matches("rush|run"))
 sumrush <- sum(running$rushing_yards, na.rm = TRUE)
 print(sumrush)
 
-#cleaning, formatting
+#cleaning, formatting ----
 ##just team basic info
 teamlist <- load_teams(2024)
 
@@ -18,12 +18,14 @@ playerstats <- load_player_stats(2018:2024) %>%
 rushtotalbygame <- playerstats %>%
   group_by(recent_team, opponent_team, week, season) %>%
   summarize(yardsperweek = sum(rushing_yards, na.rm = TRUE)) %>%
+  #summarize(carriesperweek = sum(carries, na.rm = TRUE)) %>%
   arrange(season, week)
 
 print(rushtotalbygame)
 
 ## taking winners of each game to merge with rushtotalbygame data
 ## this ultimately tells us if recent_team won or lost
+# recent_team W/L ----
 gamewinners <- load_schedules(2018:2024)
 home_won <- gamewinners %>%
   filter(result >= 0) %>%
@@ -73,5 +75,15 @@ for (i in 1:nrow(home_lost)) {
 ## view the updated rushtotalbygame dataset with wins and losses for each team
 print(rushtotalbygame)
 
+## construct data frame for wins and losses for each team when over 100 yards on week
+teamrecordsbyweek <- rushtotalbygame %>%
+  filter(yardsperweek >= 100) %>%
+  group_by(recent_team) %>%
+  summarise(wins = sum(result == "W", na.rm = TRUE), losses = sum(result == "L", na.rm = TRUE)) %>%
+  ungroup()
 
-  
+## pool overall record
+uniqueteam <- data.frame(recent_team = unique(rushtotalbygame$recent_team))
+teamrecordsoverall <- uniqueteam %>%
+  left_join(teamrecordsbyweek, by = "recent_team") %>%
+  mutate(wins = ifelse(is.na(wins), 0, wins), losses = ifelse(is.na(losses), 0, losses))
