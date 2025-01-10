@@ -87,3 +87,14 @@ uniqueteam <- data.frame(recent_team = unique(rushtotalbygame$recent_team))
 teamrecordsoverall <- uniqueteam %>%
   left_join(teamrecordsbyweek, by = "recent_team") %>%
   mutate(wins = ifelse(is.na(wins), 0, wins), losses = ifelse(is.na(losses), 0, losses))
+
+#determining probability
+
+##log regression approach, need to account for covariates in future
+win_model <- glm(result == "W" ~ yardsperweek, data = rushtotalbygame, family = "binomial")
+
+summary(win_model)
+
+## probability with two covariates, unfinished
+new_data <- data.frame(yardsperweek = 120, opponent_yardsperweek = 95)
+predict(win_model, newdata = new_data, type = "response")
