@@ -75,26 +75,6 @@ for (i in 1:nrow(home_lost)) {
 ## view the updated rushtotalbygame dataset with wins and losses for each team
 print(rushtotalbygame)
 
-## construct data frame for wins and losses for each team when over 100 yards on week
-teamrecordsbyweek <- rushtotalbygame %>%
-  filter(yardsperweek >= 100) %>%
-  group_by(recent_team) %>%
-  summarise(wins = sum(result == "W", na.rm = TRUE), losses = sum(result == "L", na.rm = TRUE)) %>%
-  ungroup()
-
-## pool overall record
-uniqueteam <- data.frame(recent_team = unique(rushtotalbygame$recent_team))
-teamrecordsoverall <- uniqueteam %>%
-  left_join(teamrecordsbyweek, by = "recent_team") %>%
-  mutate(wins = ifelse(is.na(wins), 0, wins), losses = ifelse(is.na(losses), 0, losses))
-
-#determining probability ----
-
-##log regression approach, need to account for covariates in future
-win_model <- glm(result == "W" ~ yardsperweek, data = rushtotalbygame, family = "binomial")
-
-summary(win_model)
-
 ## adding opponent_yardsperweek
 rushtotalbygame <- rushtotalbygame %>%
   mutate(opponent_yardsperweek = 0)
@@ -114,6 +94,30 @@ for (i in 1:nrow(rushtotalbygame)) {
   }
 }
 
+## construct data frame for wins and losses for each team when over 100 yards on week
+teamrecordsbyweek <- rushtotalbygame %>%
+  filter(yardsperweek >= 100) %>%
+  group_by(recent_team) %>%
+  summarise(wins = sum(result == "W", na.rm = TRUE), losses = sum(result == "L", na.rm = TRUE)) %>%
+  ungroup()
+
+## pool overall record
+uniqueteam <- data.frame(recent_team = unique(rushtotalbygame$recent_team))
+teamrecordsoverall <- uniqueteam %>%
+  left_join(teamrecordsbyweek, by = "recent_team") %>%
+  mutate(wins = ifelse(is.na(wins), 0, wins), losses = ifelse(is.na(losses), 0, losses))
+
+#determining probability ----
+
+##naive log regression approach, no other covar
+win_model <- glm(result == "W" ~ yardsperweek + opponent_yardsperweek, data = rushtotalbygame, family = "binomial")
+
+summary(win_model)
+
 ## probability with two covariates, unfinished
-new_data <- data.frame(yardsperweek = 120, opponent_yardsperweek = 95)
+new_data <- data.frame(yardsperweek = 160, opponent_yardsperweek = 25)
 predict(win_model, newdata = new_data, type = "response")
+
+#notes ----
+##This implementation is narrow, ignoring confounding##
+##future question includes win outcomes based on advanced metrics##
