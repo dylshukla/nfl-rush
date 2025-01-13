@@ -122,6 +122,7 @@ predict(win_model, newdata = new_data, type = "response")
 ##This implementation is narrow, ignoring confounding##
 ##future question includes win outcomes based on advanced metrics##
 
+# messing around again ----
 playerstats2 <- load_player_stats(2024)
 advancedstats <- load_nextgen_stats(
   seasons = 2024,
@@ -130,7 +131,8 @@ advancedstats <- load_nextgen_stats(
 
 ## assessing yards over expected per attempt with rate that rbs face 8 or more in the box
 advseasontotalstats <- advancedstats %>%
-  filter(week == "0")
+  filter(week == "0") %>%
+  mutate(expected_rush_yards_percarry = expected_rush_yards / rush_attempts)
 
 ggplot(data = advseasontotalstats, aes(x = rush_yards_over_expected_per_att, y = percent_attempts_gte_eight_defenders)) +
   geom_point() +
@@ -140,4 +142,50 @@ ggplot(data = advseasontotalstats, aes(x = rush_yards_over_expected_per_att, y =
     x = "Average Rush Yards Exceeded Per Carry",
     y = "Rate of 8 or More in the Box"
   )
+
+## another model
+ggplot(data = advseasontotalstats, aes(x = rush_yards_over_expected_per_att, y = avg_rush_yards)) +
+  geom_point() +
+  geom_text(aes(label = player_short_name), vjust = -0.5, size = 3)
+  labs(
+    title = "RBs",
+    x = "Average Rush Yards Exceeded Per Carry",
+    y = "Yards Per Carry"
+  )
+
+## another model
+ggplot(data = advseasontotalstats, aes(x = expected_rush_yards_percarry, y = efficiency)) +
+  geom_point() +
+  geom_text(aes(label = player_short_name), vjust = -0.5, size = 3)
+  labs(
+    title = "RBs",
+    x = "Average Rush Yards Expected Per Carry",
+    y = "Efficiency"
+  )
+
+## looking at qbs
+qbadvancedstats <- load_nextgen_stats(
+  seasons = 2024,
+  stat_type = c("passing"),
+  )
+
+qbadvseasontotalstats <- qbadvancedstats %>%
+  filter(week == "0")
+
+### weakness to this plot is it does not take into account systems where qbs are faced with larger windows
+ggplot(data = qbadvseasontotalstats, aes(x = aggressiveness, y = completion_percentage)) +
+  geom_point() +
+  geom_text(aes(label = player_short_name), vjust = -0.5, size = 3)
+labs(
+  title = "QBss",
+  x = "QB Aggressiveness",
+  y = "Completion Percentage"
+)
+
+
+
+
+
+
+
 
