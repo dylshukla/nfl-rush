@@ -121,3 +121,23 @@ predict(win_model, newdata = new_data, type = "response")
 #notes ----
 ##This implementation is narrow, ignoring confounding##
 ##future question includes win outcomes based on advanced metrics##
+
+playerstats2 <- load_player_stats(2024)
+advancedstats <- load_nextgen_stats(
+  seasons = 2024,
+  stat_type = c("rushing"),
+)
+
+## assessing yards over expected per attempt with rate that rbs face 8 or more in the box
+advseasontotalstats <- advancedstats %>%
+  filter(week == "0")
+
+ggplot(data = advseasontotalstats, aes(x = rush_yards_over_expected_per_att, y = percent_attempts_gte_eight_defenders)) +
+  geom_point() +
+  geom_text(aes(label = player_short_name), vjust = -0.5, size = 3)
+  labs(
+    title = "RBs",
+    x = "Average Rush Yards Exceeded Per Carry",
+    y = "Rate of 8 or More in the Box"
+  )
+
